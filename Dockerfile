@@ -1,6 +1,5 @@
 FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
 ARG DEBIAN_FRONTEND=noninteractive
-
 ENV CUDA_HOME=/usr/local/cuda \
      TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX" \
      SETUPTOOLS_USE_DISTUTILS=stdlib
@@ -28,8 +27,12 @@ ENV CUDA_HOME=$CONDA_PREFIX
 
 ENV PATH=/usr/local/cuda/bin:$PATH
 
-RUN cd GroundingDINO/ && python -m pip install .
+RUN cd GroundingDINO/ && \
+    python -m pip install . && \
+    python setup.py build develop --user && \
+    pip install packaging==21.3 gradio==3.50.2
+RUN cd GroundingDINO && python -c "import demo.gradio_app"
 
-COPY docker_test.py docker_test.py
-
-CMD [ "python", "docker_test.py" ]
+WORKDIR /opt/program/GroundingDINO
+EXPOSE 7579
+CMD [ "python", "demo/gradio_app.py" ]
